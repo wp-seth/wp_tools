@@ -34,7 +34,7 @@ sub process_form{
 		#print "<div>".uri_decode($url)."</div>\n";
 		$return_success = 1;
 	# archive.today
-	}elsif($url=~/https?:\/\/(?:www\.)?archive\.today\/[a-zA-Z0-9_]+#.*$/){
+	}elsif($url=~/https?:\/\/(?:www\.)?archive\.(?:today|is)\/[a-zA-Z0-9_]+#.*$/){
 		my $ua = LWP::UserAgent->new;
 		my $response = $ua->head($url);
 		if($response->is_success){
@@ -65,7 +65,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '0.4.20140701',
+	version => '0.5.20140706',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
