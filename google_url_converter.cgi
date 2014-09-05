@@ -28,7 +28,7 @@ sub process_form{
 	my $url = $cgi->param('url');
 	my $return_success = 0;
 	# google
-	if($url=~/[?&](?:img)?url=([^&]+)/){
+	if($url=~/[?&](?:img)?url=([^&]+)/ or $url=~/google\.[a-z]+\/url\?.*\bq=(https?:[^&]+)/){
 		$url = $1;
 		print "<div>".uri_unescape($url)."</div>\n";
 		#print "<div>".uri_decode($url)."</div>\n";
@@ -65,7 +65,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '0.5.20140706',
+	version => '0.6.20140906',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
