@@ -30,7 +30,7 @@ sub process_form{
 	# google cache
 	if($url=~/https?:\/\/webcache\.googleusercontent\.com\/search\?q=cache:[a-zA-Z0-9_]{12}:([^+ ]+)/){
 		$url = $1;
-		#$url = 'http://'.$url unless $url =~ /^(?:https?|ftp):\/\//;
+		$url = 'http://'.$url unless $url =~ /^(?:https?|ftp):\/\//;
 		print "<div>".uri_unescape($url)."</div>\n";
 		$return_success = 1;
 	# google redirects
