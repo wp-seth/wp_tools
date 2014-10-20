@@ -28,7 +28,7 @@ sub process_form{
 	my $url = $cgi->param('url');
 	my $return_success = 0;
 	# google cache
-	if($url=~/https?:\/\/webcache\.googleusercontent\.com\/search\?q=cache:[a-zA-Z0-9_]{12}:([^+ ]+)/){
+	if($url=~/https?:\/\/webcache\.googleusercontent\.com\/search\?q=cache:[a-zA-Z0-9_=-]{12}:([^+ ]+)/){
 		$url = $1;
 		$url = 'http://'.$url unless $url =~ /^(?:https?|ftp):\/\//;
 		print "<div>".uri_unescape($url)."</div>\n";
