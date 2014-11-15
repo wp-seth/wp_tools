@@ -20,6 +20,14 @@ BEGIN{
 
 $| = 1;
 
+sub naive_html_encode{
+	my $url = shift;
+	$url =~ s/&/&amp;/g;
+	$url =~ s/</&lt;/g;
+	$url =~ s/>/&gt;/g;
+	return $url;
+}
+
 my $cgi = new CGI;
 print $cgi->header(-charset=>'utf-8');                                         # output the HTTP header
 
@@ -31,12 +39,12 @@ sub process_form{
 	if($url=~/https?:\/\/webcache\.googleusercontent\.com\/search\?q=cache:[a-zA-Z0-9_-]{12}:([^+ ]+)/){
 		$url = $1;
 		$url = 'http://'.$url unless $url =~ /^(?:https?|ftp):\/\//;
-		print "<div>".uri_unescape($url)."</div>\n";
+		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 		$return_success = 1;
 	# google redirects
 	}elsif($url=~/[?&](?:img)?url=([^&]+)/ or $url=~/google\.[a-z]+\/url\?.*\bq=(https?:[^&]+)/){
 		$url = $1;
-		print "<div>".uri_unescape($url)."</div>\n";
+		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 		#print "<div>".uri_decode($url)."</div>\n";
 		$return_success = 1;
 	# archive.today
@@ -54,13 +62,13 @@ sub process_form{
 				my $dt = $parser->parse_datetime($date);
 				$date = $dt->strftime('%Y%m%d%H%M%S');
 				$url = "http://archive.today/$date/$1";
-				print "<div>".uri_unescape($url)."</div>\n";
+				print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 				$return_success = 1;
 			}else{
-				print "<div>could not get information about original url from '$url'.</div>\n";
+				print "<div>could not get information about original url from '".naive_html_encode($url)."'.</div>\n";
 			}
 		}else{
-			print "<div>could not get header of '$url'.</div>\n";
+			print "<div>could not get header of '".naive_html_encode($url)."'.</div>\n";
 		}
 	}
 	return $return_success;
