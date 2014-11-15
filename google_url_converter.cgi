@@ -79,7 +79,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '0.7.20141019',
+	version => '0.8.20141115',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
