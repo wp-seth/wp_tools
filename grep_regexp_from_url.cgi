@@ -24,32 +24,46 @@ print $cgi->header(-charset=>'utf-8');                                         #
 
 # sub min
 # 	calc special min(array of array refs)
+#
 # sub url2filename
 # 	make filename out of url by 1. prefix 'file_' and 2. replacing ':' and '/' by '_'
+#
 # sub unixtime2iso_
+#
 # sub unixtime2time_diff_to_now
 # 	result is in minutes
+#
 # sub current_year
+#
 # sub get_file_mod_date
 # 	get date of last file modification
+#
 # sub get_url_content
 # 	get content of web page (between pre-tags)
+#
 # sub log_user_input
 # 	used for logging requests
+#
 # sub is_regexp
 # 	returns true if params can be treates as a regexp
+#
 # sub quote_html
+#
 # sub unquote_html
+#
 # sub get_last_updates
 # 	get last updates of sbl, swl and logs
+#
 # sub search_logs
+#
 # sub gen_cgi_request
 # 	generate a GET-string (url)
+#
+# sub choose_spamlists
+#
 # sub process_form
 # 	process user input
 
-
-# calc special min(array of array refs)
 sub min{
 	my $types_ptr = shift; # hash ref
 	my $arr_ptr = shift; # array ref of array refs
@@ -66,7 +80,6 @@ sub min{
 	return $min;
 }
 
-# make filename out of url by 1. prefix 'file_' and 2. replacing ':' and '/' by '_'
 sub url2filename{
 	my $fn = shift;
 	if(defined $fn){
@@ -93,41 +106,39 @@ sub current_year{
 	return $Year + 1900;
 }
 
-# get date of last file modification
 sub get_file_mod_date{
 	my $filename = shift;
-	my @info = ();
-	my $date = undef;
-	if(defined $filename && -e $filename){
-		@info = stat($filename);
-		$date = $info[9];
+	my $date;
+	if(defined $filename and -e $filename){
+		$date = (stat $filename)[9];
 	}
 	return $date;
 }
 
-# get content of web page (between pre-tags)
 sub get_url_content{
-	my $mech = shift;
-	my $sbl_ptr = shift; # [0]=projekt, [1]=url
+	my $mech            = shift;
+	my $sbl_ptr         = shift; # [0]=projekt, [1]=url
 	my $last_update_ptr = shift;
-	my $forcepurge = shift;
-	my $url = $sbl_ptr->[1];
-	my $is_log = ($last_update_ptr->{$sbl_ptr->[0]}{$url}[0] eq 'log'); # otherwise it's a list
+	my $forcepurge      = shift;
+	my $url             = $sbl_ptr->[1];
+	my $is_log          = ($last_update_ptr->{$sbl_ptr->[0]}{$url}[0] eq 'log'); # otherwise it's a list
 	my ($precontent, $content);
 	my $filename = url2filename($url);
 	my $url_wiki_content = $url;
 	$url_wiki_content=~s/wiki\/(.*)/w\/index.php?title=$1&action=raw&sb_ver=1/ if not $is_log;
+	#print STDERR "filename: '$filename'\n";
+	#print STDERR "url '$url_wiki_content'\n";
 	my $response = $mech->mirror($url_wiki_content, $filename) or die "could not open url: $!"; # mirror webpage to file
 	# my $sys_res = `wget -o wgetlog -N ${url}?action=purge -O $filename`; # mirror webpage to file
 	# $response->is_success or die "could not read url\n";
 	# $precontent = $response->content;
 	if(not -e $filename){
-		print 'could not retrieve information. perhaps there is no url '.$url.'?'."\n";
+		print "could not retrieve information. perhaps there is no url '$url' or its content is empty.\n";
 		$precontent = '';
 		$content = '';
 	}else{
 		my $age_of_file = time-get_file_mod_date($filename);
-		if($forcepurge && $age_of_file>60*5 || $age_of_file>60*60*24){
+		if($forcepurge and $age_of_file > 60*5 or $age_of_file > 60*60*24){
 			my $purge_url = $url;
 			# http://meta.wikimedia.org/w/index.php?title=Spam_blacklist&action=raw&sb_ver=1
 			$purge_url=~s/wiki\/(.*)/w\/index.php?title=$1&action=purge/;
@@ -137,9 +148,9 @@ sub get_url_content{
 		}
 		$last_update_ptr->{$sbl_ptr->[0]}{$url}[1] = get_file_mod_date($filename); # refresh value in "last_update"
 		#print STDERR $url.': '.unixtime2time_diff_to_now(get_file_mod_date($filename))."\n";
-		open(datFILE, '<'.$filename) || die "$!\n";
-			my @file = <datFILE>;
-		close(datFILE);
+		open(my $dat_file, '<', $filename) or die "cannot read '$filename': $!\n";
+			my @file = <$dat_file>;
+		close($dat_file);
 		$precontent = join '', @file;
 		die 'not a valid file: '.$url."\n" if $precontent!~/<pre\b[^>]*>/;
 		$content = $precontent if $is_log;
@@ -156,13 +167,13 @@ sub log_user_input{
 	my $cgi = shift;
 	my @names = $cgi->param;
 	my $log_entry = time.' ';
-	open(datFILE, '>>grep_regexp_from_url.log') || die "$!\n";
+	open(my $dat_file, '>>', 'grep_regexp_from_url.log') or die "$!\n";
 		for(@names){
 			$log_entry .= $_.'='.$cgi->param($_).' ' if $_ ne 'fsubmit';
 		}
 		chop $log_entry;
-		print datFILE $log_entry."\n";
-	close(datFILE);
+		print $dat_file $log_entry."\n";
+	close($dat_file);
 }
 
 sub is_regexp{
@@ -172,21 +183,20 @@ sub is_regexp{
 
 sub quote_html{
 	my $q = shift;
-	$q=~s/&/&amp;/g;
-	$q=~s/</&lt;/g;
-	$q=~s/>/&gt;/g;
+	$q =~ s/&/&amp;/g;
+	$q =~ s/</&lt;/g;
+	$q =~ s/>/&gt;/g;
 	return $q;
 }
 
 sub unquote_html{
 	my $q = shift;
-	$q=~s/&lt;/</g;
-	$q=~s/&gt;/>/g;
-	$q=~s/&amp;/&/g;
+	$q =~ s/&lt;/</g;
+	$q =~ s/&gt;/>/g;
+	$q =~ s/&amp;/&/g;
 	return $q;
 }
 
-# get last updates of sbl, swl and logs
 sub get_last_updates{
 	my $lists_ptr = shift;
 	my $logs_ptr = shift;
@@ -289,12 +299,83 @@ sub gen_cgi_request{
 	return $script_name.'?'.$querystring;
 }
 
-sub process_form{
-	my $cgi = shift;
+sub choose_spamlists{
+	my $ud_lang  = shift;
+	my $ud_proj  = shift;
 	my $projects = shift;
-	my $url = $cgi->param('url');
-	$url=~s/^\s+|\s+$//g;                                                # trim url
+	my $mech     = shift;
+	my @spamlists = ([
+			'meta black', 
+			'http://meta.wikimedia.org/wiki/Spam_blacklist', 
+			'meta blacklist'
+		]
+	);
+	# chose whiteliste and blacklists depending on user-defined language (and 
+	# user-defined project)
+	# if ud_lang is a number, then use biggest n wikis
+	# if ud_lang is empty, then use meta only
+	# else interpret ud_lang as language abbreviation
+	if($ud_lang =~ /^[0-9]+\z/ and $ud_lang > 0 and $ud_lang < 58){
+		# get list of languages, sorted by size of wikipedia
+		# mirror webpage to file
+		my $response = $mech->mirror(
+			'http://s23.org/wikistats/wikipedias_csv.php', 
+			'wikipedias_csv',
+		) or die "could not open url: $!";
+		# $response->is_success or die "could not read url\n";
+		open(my $dat_file, '<', 'wikipedias_csv') or die "cannot read 'wikipedias_csv': $!\n";
+			while(<$dat_file>){
+				if(/(\d+),\d+,([a-z]{2,3}),/){
+					my $lang_index = $1;
+					my $lang       = $2;
+					last if $lang_index > $ud_lang;
+					for my $bw('black', 'white'){
+						push @spamlists, [
+							$ud_proj.':'.$lang.' '.$bw, 
+							'http://'.$lang.'.'.$projects->{$ud_proj}.'.org/wiki/MediaWiki:Spam-'.$bw.'list',
+							$lang.'-'.$projects->{$ud_proj}.' '.$bw.'list',
+						];
+					}
+					if($lang eq 'en' && $ud_proj eq 'w'){
+						push @spamlists, [
+							'w:en:XLinkBot revert', 
+							'http://en.wikipedia.org/wiki/User:XLinkBot/RevertList', 
+							'XBotLink revertlist',
+						];
+					}
+				}
+			}
+		close($dat_file);
+	}elsif($ud_lang eq ''){
+		# search meta lists only
+	}else{
+		die 'wrong language. only /^[a-z]{2,10}\z/ allowed.' if $ud_lang!~/^[a-z]{2,10}\z/;
+		for my $bw('black', 'white'){
+			push @spamlists, [
+				$ud_proj.':'.$ud_lang.' '.$bw, 
+				'http://'.$ud_lang.'.'.$projects->{$ud_proj}.'.org/wiki/MediaWiki:Spam-'.$bw.'list',
+				$ud_lang.'-'.$projects->{$ud_proj}.' '.$bw.'list',
+			];
+		}
+		if($ud_lang eq 'en' && $ud_proj eq 'w'){
+			push @spamlists, [
+				'w:en:XLinkBot revert', 
+				'http://en.wikipedia.org/wiki/User:XLinkBot/RevertList', 
+				'XBotLink revertlist'
+			];
+		}
+	}
+	return \@spamlists;
+}
+
+sub process_form{
+	my $cgi      = shift;
+	my $projects = shift;
+	my $url      = $cgi->param('url'); # external url to be checked
+	$url=~s/^\s+|\s+$//g; # trim url
+	# user defined language
 	my $ud_lang = (defined $cgi->param('userdeflang')) ? $cgi->param('userdeflang') : '';
+	# user defined project
 	my $ud_proj = (defined $cgi->param('userdefproj')) ? $cgi->param('userdefproj') : 'w';
 	die 'project does not exist.' if $ud_proj!~/^[a-z]{1,4}\z/;
 	my $forcepurge = ($cgi->param('purge'));
@@ -302,37 +383,9 @@ sub process_form{
 	my $debug = 0;
 	my $mech = LWP::UserAgent->new;
 	$mech->agent('Mozilla/5.0 seth_bot');
-	$url =~ s/^(?!https?:\/\/)/http:\/\//;                              # prefix http:// automatically, if not existing
-	my @spamlists = (['meta black', 'http://meta.wikimedia.org/wiki/Spam_blacklist', 'meta blacklist']);
-	# chose whiteliste and blacklists depending on user-defined language (and user-defined project)
-	if($ud_lang=~/^\d+\z/ && $ud_lang>0 && $ud_lang<58){
-		# beta state function: use biggest n wikis
-		my $response = $mech->mirror('http://s23.org/wikistats/wikipedias_csv.php', 'wikipedias_csv') or die "could not open url: $!"; # mirror webpage to file
-		# $response->is_success or die "could not read url\n";
-		open(datFILE, '<wikipedias_csv') || die "$!\n";
-			while(<datFILE>){
-				if(/(\d+),\d+,([a-z]{2,3}),/){
-					last if $1>$ud_lang;
-					push @spamlists,
-						[$ud_proj.':'.$2.' black', 'http://'.$2.'.'.$projects->{$ud_proj}.'.org/wiki/MediaWiki:Spam-blacklist', $2.'-'.$projects->{$ud_proj}.' blacklist'],
-						[$ud_proj.':'.$2.' white', 'http://'.$2.'.'.$projects->{$ud_proj}.'.org/wiki/MediaWiki:Spam-whitelist', $2.'-'.$projects->{$ud_proj}.' whitelist'];
-						if($2 eq 'en' && $ud_proj eq 'w'){
-							push @spamlists, ['w:en:XLinkBot revert', 'http://en.wikipedia.org/wiki/User:XLinkBot/RevertList', 'XBotLink revertlist'];
-						}
-				}
-			}
-		close(datFILE);
-	}elsif($ud_lang eq ''){
-		# search meta lists only
-	}else{
-		die 'wrong language. only /^[a-z]{2,10}\z/ allowed.' if $ud_lang!~/^[a-z]{2,10}\z/;
-		push @spamlists,
-		[$ud_proj.':'.$ud_lang.' black', 'http://'.$ud_lang.'.'.$projects->{$ud_proj}.'.org/wiki/MediaWiki:Spam-blacklist', $ud_lang.'-'.$projects->{$ud_proj}.' blacklist'],
-		[$ud_proj.':'.$ud_lang.' white', 'http://'.$ud_lang.'.'.$projects->{$ud_proj}.'.org/wiki/MediaWiki:Spam-whitelist', $ud_lang.'-'.$projects->{$ud_proj}.' whitelist'];
-		if($ud_lang eq 'en' && $ud_proj eq 'w'){
-			push @spamlists, ['w:en:XLinkBot revert', 'http://en.wikipedia.org/wiki/User:XLinkBot/RevertList', 'XBotLink revertlist'];
-		}
-	}
+	# set prefix http:// automatically, if not existing
+	$url =~ s/^(?!https?:\/\/)/http:\/\//;
+	my $spamlists = choose_spamlists($ud_lang, $ud_proj, $projects, $mech);
 	my %spamlistlogs = (
 			 'meta black'    => ['http://meta.wikimedia.org/wiki/Spam_blacklist/Log'],
 			 'w:en black'    => ['http://en.wikipedia.org/wiki/MediaWiki_talk:Spam-blacklist/log'],
@@ -340,36 +393,45 @@ sub process_form{
 			 'w:en:XLinkBot revert' => ['http://en.wikipedia.org/wiki/User:XLinkBot/RevertList_requests/log'],
 			 'w:de black'    => ['http://de.wikipedia.org/wiki/Wikipedia:Spam-blacklist/log'],
 			 'w:de white'    => ['http://de.wikipedia.org/wiki/Wikipedia:Spam-blacklist/log']);
-	push @{$spamlistlogs{'meta black'}}, map {"http://meta.wikimedia.org/wiki/Spam_blacklist/Log/$_"} (2004..current_year());
-	my %last_updates = get_last_updates(\@spamlists, \%spamlistlogs);
-	my $entry_mod;
-	my $entry_comment;
-	my $output;
-	my $project;
-	my $last_update;
+	push @{$spamlistlogs{'meta black'}}, 
+		map {"http://meta.wikimedia.org/wiki/Spam_blacklist/Log/$_"} (2004..current_year());
+	my %last_updates = get_last_updates($spamlists, \%spamlistlogs);
+	#print STDERR Dumper \%last_updates;
+	my ($entry_mod, $entry_comment, $output, $project, $last_update);
 	my @sblentries; 
 	my %log_used; # project=>X    X: 0=not used; 1=used
 	my $found_entry; # 0=not found; 1=found
-	for(my $spamlist_ctr=0; $spamlist_ctr<@spamlists; ++$spamlist_ctr){ # for each spamlist
-		$project = $spamlists[$spamlist_ctr][0];                          # just a shortcut
-		my $present_spamlist_url = $spamlists[$spamlist_ctr][1];
+	# for each spamlist: search for blocking entries
+	#print STDERR Dumper $spamlists;
+	for(my $spamlist_ctr = 0; $spamlist_ctr < @$spamlists; ++$spamlist_ctr){
+		$project = $spamlists->[$spamlist_ctr][0]; # just a shortcut
+		#print STDERR "project '$project'\n";
+		my $present_spamlist_url = $spamlists->[$spamlist_ctr][1];
 		$present_spamlist_url =~s/^https?://;
-		$output = "\t".'<div>list: <a href="'.$present_spamlist_url.'">'.$spamlists[$spamlist_ctr][2]."</a></div>\n\t<ul>\n";
+		$output = "\t".'<div>list: <a href="'.$present_spamlist_url.'">'.
+			$spamlists->[$spamlist_ctr][2]."</a></div>\n\t<ul>\n";
 		$log_used{$project} = 0 if not defined $log_used{$project};
 		$found_entry = 0;
-		@sblentries = split /\n/, get_url_content($mech, $spamlists[$spamlist_ctr], \%last_updates, $forcepurge);# get spamlist and split entries to lines
-		#print STDERR $spamlists[$spamlist_ctr][1].': '.unixtime2time_diff_to_now($last_updates{$project}{$spamlists[$spamlist_ctr][1]}[1])."\n";
+		# get spamlist and split entries to lines
+		@sblentries = split /\n/, get_url_content(
+			$mech, 
+			$spamlists->[$spamlist_ctr], 
+			\%last_updates, 
+			$forcepurge
+		);
+		#print STDERR $spamlists->[$spamlist_ctr][1].': '.
+		#		unixtime2time_diff_to_now($last_updates{$project}{$spamlists->[$spamlist_ctr][1]}[1])."\n";
 		for(@sblentries){
-#			s/&lt;/</g;                                               # html-entity
-#			s/&gt;/>/g;                                               # html-entity
-#			s/&amp;/&/g;                                              # html-entity
-			s~\\*/~\/~g;                                              # 'repair' slashes (just like the spamextension does)
+#			s/&lt;/</g;   # html-entity
+#			s/&gt;/>/g;   # html-entity
+#			s/&amp;/&/g;  # html-entity
+			s~\\*/~\/~g;  # 'repair' slashes (just like the spamextension does)
 		}
-		@sblentries = grep !/^ *(?:#.*)?$/, @sblentries;            # remove empty and comments lines
-		for my $entry (@sblentries){                                # search patterns, which match given $url
+		@sblentries = grep !/^ *(?:#.*)?$/, @sblentries;  # remove empty and comments lines
+		for my $entry (@sblentries){                      # search patterns that match given $url
 			$entry_comment = '';
 			if($entry=~/#/){
-				$entry =~ s/ *# *(.*)//;                                  # remove (but save) comments
+				$entry =~ s/ *# *(.*)//;                      # remove (but save) comments
 				$entry_comment = $1;
 			}
 			$entry =~ s/\s+$//;
@@ -379,16 +441,26 @@ sub process_form{
 			}
 			if($url =~ /https?:\/\/+[a-z0-9_.-]*(?:$entry_mod)/i){    # if url in current spamlist
 				$found_entry = 1;
-				$output.="\t\t".'<li class="'.(($project=~/white/) ? 'whiteentry': 'blackentry').'">'."\n\t\t\t".'<span class="foundentry">'.quote_html($entry)."</span>\n\t\t\t<ul>\n";
-				$output.="\t\t\t\t".'<li class="comment">additional comment: '.$entry_comment."</li>\n" if $entry_comment ne '';
-				$log_used{$project} = search_logs(\$output, $debug, \%spamlistlogs, $project, $entry, $url, $mech, \%last_updates, $forcepurge);
+				$output.="\t\t".'<li class="'.(($project=~/white/) ? 'whiteentry': 'blackentry').
+					'">'."\n\t\t\t".'<span class="foundentry">'.quote_html($entry)."</span>\n\t\t\t<ul>\n";
+				if($entry_comment ne ''){
+					$output.="\t\t\t\t".'<li class="comment">additional comment: '.$entry_comment."</li>\n";
+				}
+				$log_used{$project} = search_logs(
+					\$output, $debug, \%spamlistlogs, $project, $entry, $url, $mech, \%last_updates, $forcepurge);
 				$output.="\t\t\t</ul>\n\t\t</li>\n";
 			}
 		}
 		if(defined $last_updates{$project}){
+			#print STDERR "last_updates{$project}\n";
 			#print STDERR Dumper $last_updates{$project};
 			$output.="\t\t".'<li class="noentries">no entries here.</li>'."\n" if !$found_entry;
-			if((not defined $last_update) || $last_update>min({'list'=>1, 'log'=>$log_used{$project}}, [values %{$last_updates{$project}}])){
+			#print STDERR " last update: $last_update\n" if defined $last_update;
+			if((not defined $last_update) or $last_update > (min(
+					{'list'=>1, 'log'=>$log_used{$project}}, 
+					[values %{$last_updates{$project}}]
+				) // 0)
+			){
 				$last_update = min({'list'=>1, 'log'=>$log_used{$project}}, [values %{$last_updates{$project}}]);
 			}
 			# if each list should have the information of last update
@@ -432,7 +504,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '1.2.20131225',
+	version => '1.3.20141226',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 	userdeflang => ($cgi->param('userdeflang')) ? ' value="'.$cgi->param('userdeflang').'"' : '',
