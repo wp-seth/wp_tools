@@ -61,7 +61,7 @@ sub process_form{
 				);
 				my $dt = $parser->parse_datetime($date);
 				$date = $dt->strftime('%Y%m%d%H%M%S');
-				$url = "http://archive.today/$date/$1";
+				$url = "http://archive.is/$date/$1";
 				print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 				$return_success = 1;
 			}else{
