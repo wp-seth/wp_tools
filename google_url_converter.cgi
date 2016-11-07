@@ -65,10 +65,12 @@ sub process_form{
 				print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 				$return_success = 1;
 			}else{
-				print "<div>could not get information about original url from '".naive_html_encode($url)."'.</div>\n";
+				print "<div>could not get information about original url from '" 
+					. naive_html_encode($url) . "'.</div>\n";
 			}
 		}else{
-			print "<div>could not get header of '".naive_html_encode($url)."'.</div>\n";
+			print "<div>could not get header of '" . naive_html_encode($url) 
+				. "' (http status code: " . $response->code . ").</div>\n";
 		}
 	}
 	return $return_success;
@@ -79,7 +81,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '1.0.20160213',
+	version => '1.1.20161107',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
