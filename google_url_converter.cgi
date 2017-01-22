@@ -80,7 +80,7 @@ sub process_form{
 			}
 		}else{
 			print "<div>could not get header of '" . naive_html_encode($url) 
-				. "'.</div>\n";
+				. "' (http status code: " . $response->code . ").</div>\n";
 		}
 	}
 	return $return_success;
@@ -91,7 +91,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '1.1.20170122',
+	version => '1.2.20170122',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
