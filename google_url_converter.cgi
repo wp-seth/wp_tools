@@ -49,12 +49,13 @@ sub process_form{
 		$return_success = 1;
 	# archive.today
 	}elsif($url=~/https?:\/\/(?:www\.)?archive\.(?:today|is)\/[a-zA-Z0-9_]+(?:#.*)?$/){
-		my $ua = LWP::UserAgent->new;
-		my $response = $ua->head($url);
+		my $ua = LWP::UserAgent->new('agent' => 'Mozilla/5.0');
+		my $response = $ua->get($url);
 		if($response->is_success){
 			my $date     = $response->header('Memento-Datetime');
 			my $orig_url = $response->header('Link');
-			if(defined $date and defined $orig_url and $orig_url =~ /^\s*<([^>]+)>; rel="original"/){
+			if(defined $date && defined $orig_url 
+				&& $orig_url =~ /^\s*<([^>]+)>; rel="original"/){
 				my $parser = DateTime::Format::Strptime->new(
 					pattern => '%a, %d %b %Y %H:%M:%S %Z',
 					on_error => 'croak',
@@ -62,13 +63,24 @@ sub process_form{
 				my $dt = $parser->parse_datetime($date);
 				$date = $dt->strftime('%Y%m%d%H%M%S');
 				$url = "http://archive.is/$date/$1";
-				print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
+				print "<div>" . naive_html_encode(uri_unescape($url)) . "</div>\n";
+				$return_success = 1;
+			}elsif($response->content =~ 
+				/<link\s
+					rel="bookmark"\s
+					href="(https?:\/\/archive\.(?:today|is)\/[0-9]{14}\/[^"]+)"
+				\/>/x
+			){
+				$url = $1;
+				print "<div>" . naive_html_encode(uri_unescape($url)) . "</div>\n";
 				$return_success = 1;
 			}else{
-				print "<div>could not get information about original url from '".naive_html_encode($url)."'.</div>\n";
+				print "<div>could not get information about original url from '" 
+					. naive_html_encode($url) . "'.</div>\n";
 			}
 		}else{
-			print "<div>could not get header of '".naive_html_encode($url)."'.</div>\n";
+			print "<div>could not get header of '" . naive_html_encode($url) 
+				. "'.</div>\n";
 		}
 	}
 	return $return_success;
@@ -79,7 +91,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '1.0.20160213',
+	version => '1.1.20170122',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
