@@ -74,6 +74,10 @@ sub process_form{
 				$url = $1;
 				print "<div>" . naive_html_encode(uri_unescape($url)) . "</div>\n";
 				$return_success = 1;
+				if($response->content =~ /^\Q | url         = \E(http.*)$/m){
+					$url = $1;
+					print "<div>" . naive_html_encode(uri_unescape($url)) . "</div>\n";
+				}
 			}else{
 				print "<div>could not get information about original url from '" 
 					. naive_html_encode($url) . "'.</div>\n";
