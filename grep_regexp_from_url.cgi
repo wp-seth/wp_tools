@@ -436,8 +436,17 @@ sub process_form{
 			}
 			$entry =~ s/\s+$//;
 			$entry_mod = $entry;
-			while($entry_mod=~/(.*)\(\?<([!=])([^()]+)\|([^()]+)\)(.*)/){ # cope with: old-perl vs. new-php
-				$entry_mod = $1.'(?<'.$2.$3.')'.$5.'|'.$1.'(?<'.$2.$4.')'.$5;
+			# cope with: old-perl vs. new-php
+			while($entry_mod =~ /(.*)
+				\(\?<    # look-behind pattern (begin)
+				([!=])   # negative or positive
+				([^()]+) # first option
+				\|       # alternative
+				([^()]+) # second option
+				\)       # look-behind pattern (end)
+				(.*)/x){
+				# replace by multiple look-behinds
+				$entry_mod = $1 . '(?<' . $2 . $3 . ')' . $5 . '|' . $1 . '(?<' . $2 . $4 . ')' . $5;
 			}
 			if($url =~ /https?:\/\/+[a-z0-9_.-]*(?:$entry_mod)/i){    # if url in current spamlist
 				$found_entry = 1;
