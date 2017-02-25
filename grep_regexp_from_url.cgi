@@ -268,16 +268,15 @@ sub search_logs{
 				 		 # valid regexp (some entries are invalid!)
 				 		($_ =~ /^\s*([^#\s]+)/ && is_regexp($1) 
 				 		 # match url
-				 		 && $url =~ /https?:\/\/+[a-z0-9_.-]*(?:$1)/i 
+				 		 && $url =~ /https?:\/\/+[a-z0-9_.-]*(?:$1)/iaa
 				 	  )
 				  || # regexp-entry (cope with regexp changes, i.e., a special log syntax)
 						 # and valid regexp (some entries are invalid!)
 						($_ =~ /^\s*[^#\s]+\s*→\s*([^#\s]+)/ && is_regexp($1) 
 						 # match url
-				 		 && $url =~ /https?:\/\/+[a-z0-9_.-]*(?:$1)/i
+				 		 && $url =~ /https?:\/\/+[a-z0-9_.-]*(?:$1)/iaa
 				 		);
-				}
-											 split /\n/, $precontent;
+			} split /\n/, $precontent;
 			print STDERR '' . (join "\n", @sbllogentries) . "\n" if $debug >= 2;
 			# for each relevant spamlistlog entry
 			for($i = 0; $i < @sbllogentries; ++$i){
@@ -506,7 +505,7 @@ sub process_form{
 					$1 . '(?<' . $2 . $3 . ')' . $5 . '|' . $1 . '(?<' . $2 . $4 . ')' . $5;
 			}
 			# if url in current spamlist
-			if($url =~ /https?:\/\/+[a-z0-9_.-]*(?:$entry_mod)/i){
+			if($url =~ /https?:\/\/+[a-z0-9_.-]*(?:$entry_mod)/iaa){
 				$found_entry = 1;
 				$output .= "\t\t" . '<li class="' . 
 					(($project=~/white/) ? 'whiteentry': 'blackentry') . '">' . "\n\t\t\t" . 
