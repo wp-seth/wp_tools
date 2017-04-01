@@ -36,24 +36,24 @@ sub process_form{
 	my $url = $cgi->param('url');
 	my $return_success = 0;
 	# google cache
-	if($url=~/https?:\/\/webcache\.googleusercontent\.com\/search\?q=cache:[a-zA-Z0-9_-]{12}:([^+ ]+)/){
+	if($url =~ /https?:\/\/webcache\.googleusercontent\.com\/search\?q=cache:[a-zA-Z0-9_-]{12}:([^+ ]+)/){
 		$url = $1;
 		$url = 'http://'.$url unless $url =~ /^(?:https?|ftp):\/\//;
 		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 		$return_success = 1;
 	# google redirects
-	}elsif($url=~/[?&](?:img)?url=([^&]+)/ or $url=~/google\.[a-z]+\/url\?.*\bq=(https?:[^&]+)/){
+	}elsif($url =~ /[?&](?:img)?url=([^&]+)/ or $url=~/google\.[a-z]+\/url\?.*\bq=(https?:[^&]+)/){
 		$url = $1;
 		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 		#print "<div>".uri_decode($url)."</div>\n";
 		$return_success = 1;
 	# facebook redirects
-	}elsif($url=~/^https?:\/\/[a-z0-9-.]*facebook\..*[?&]u=(http[^&]+)//){
+	}elsif($url =~ /^https?:\/\/[a-z0-9-.]*facebook\..*[?&]u=(http[^&]+)/){
 		$url = $1;
 		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 		$return_success = 1;
 	# archive.today
-	}elsif($url=~/https?:\/\/(?:www\.)?archive\.(?:today|is)\/[a-zA-Z0-9_]+(?:#.*)?$/){
+	}elsif($url =~ /https?:\/\/(?:www\.)?archive\.(?:today|is)\/[a-zA-Z0-9_]+(?:#.*)?$/){
 		my $ua = LWP::UserAgent->new('agent' => 'Mozilla/5.0');
 		my $response = $ua->get($url);
 		if($response->is_success){
