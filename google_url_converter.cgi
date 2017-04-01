@@ -47,6 +47,11 @@ sub process_form{
 		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
 		#print "<div>".uri_decode($url)."</div>\n";
 		$return_success = 1;
+	# facebook redirects
+	}elsif($url=~/^https?:\/\/[a-z0-9-.]*facebook\..*[?&]u=(http[^&]+)//){
+		$url = $1;
+		print "<div>".naive_html_encode(uri_unescape($url))."</div>\n";
+		$return_success = 1;
 	# archive.today
 	}elsif($url=~/https?:\/\/(?:www\.)?archive\.(?:today|is)\/[a-zA-Z0-9_]+(?:#.*)?$/){
 		my $ua = LWP::UserAgent->new('agent' => 'Mozilla/5.0');
@@ -95,7 +100,7 @@ my $script_name = $0;
 $script_name =~s/^.*\///;
 $template->param(
 	css_file => 'format.css',
-	version => '1.2.20170122',
+	version => '1.2.20170401',
 	cgi_script => $script_name,
 	userinput_url => ($cgi->param('url')) ? ' value="'.$cgi->param('url').'"' : '',
 );
